@@ -18,7 +18,7 @@ jobs:
 
       - name: Compilation
         run: |
-          scons platform=linuxbsd arch=arm64 target=template_release precision=double display_server=headless builtin_zstd=yes builtin_zlib=yes use_asm=no -j2
+          scons platform=linuxbsd arch=arm64 target=template_release precision=double display_server=headless builtin_zstd=yes builtin_zlib=yes use_asm=no CCFLAGS="-DZSTD_NO_ASM" CXXFLAGS="-DZSTD_NO_ASM" -j2
 
       - name: Upload Binary
         uses: actions/upload-artifact@v4
