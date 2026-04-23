@@ -1,0 +1,28 @@
+name: Aki ARM Forge
+on: [workflow_dispatch] # This lets you start it manually with a button
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential scons pkg-config libx11-dev libxcursor-dev \
+            libxinerama-dev libxi-dev libxrandr-dev libgl-dev libvulkan-dev \
+            libasound2-dev libpulse-dev libudev-dev libdbus-1-dev \
+            libfontconfig1-dev libxkbcommon-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Compilation
+        run: |
+          scons platform=linuxbsd arch=arm64 target=template_release precision=double \
+            display_server=headless builtin_zstd=yes builtin_zlib=yes use_asm=no -j2
+            
+      - name: Upload Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-arm64-server
+          path: bin/godot.linuxbsd.template_release.double.arm64
