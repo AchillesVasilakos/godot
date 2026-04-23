@@ -1,9 +1,9 @@
 name: Aki ARM Forge
-on: [workflow_dispatch] # This lets you start it manually with a button
+on: [workflow_dispatch]
 
 jobs:
   build-arm64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,9 +18,8 @@ jobs:
 
       - name: Compilation
         run: |
-          scons platform=linuxbsd arch=arm64 target=template_release precision=double \
-            display_server=headless builtin_zstd=yes builtin_zlib=yes use_asm=no -j2
-            
+          scons platform=linuxbsd arch=arm64 target=template_release precision=double display_server=headless builtin_zstd=yes builtin_zlib=yes use_asm=no -j2
+
       - name: Upload Binary
         uses: actions/upload-artifact@v4
         with:
