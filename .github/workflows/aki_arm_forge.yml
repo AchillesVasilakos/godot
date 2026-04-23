@@ -11,22 +11,24 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential scons pkg-config libx11-dev libxcursor-dev \
-            libxinerama-dev libxi-dev libxrandr-dev libgl-dev libvulkan-dev \
-            libasound2-dev libpulse-dev libudev-dev libdbus-1-dev \
-            libfontconfig1-dev libxkbcommon-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          # We only install the bare essentials and the ARM compilers. 
+          # No desktop UI headers to avoid the "Multiarch Trap."
+          sudo apt-get install -y build-essential scons pkg-config \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
-      - name: Patch Zstd (The Sting Killer)
+      - name: Patch Zstd (The Huffman Killer)
         run: |
-          # This forces Zstd to realize it should NOT use x86 assembly on ARM64
+          # This physically disables the broken x86 assembly loops in the Zstd source
           sed -i 's/ZSTD_ENABLE_ASM_X86_64_BMI2 1/ZSTD_ENABLE_ASM_X86_64_BMI2 0/g' thirdparty/zstd/common/zstd_deps.h || true
           sed -i 's/ZSTD_ENABLE_ASM_X86_64_BMI2 1/ZSTD_ENABLE_ASM_X86_64_BMI2 0/g' thirdparty/zstd/common/portability_macros.h || true
 
       - name: Compilation
         run: |
           scons platform=linuxbsd arch=arm64 target=template_release precision=double \
-            display_server=headless builtin_zstd=yes builtin_zlib=yes builtin_freetype=yes \
-            use_asm=no CCFLAGS="-DZSTD_DISABLE_ASM=1 -DZSTD_HAVE_ASM_X86_64_BMI2=0" -j2
+            display_server=headless CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ \
+            audio=dummy udev=no fontconfig=no \
+            builtin_pcre2=yes builtin_enet=yes builtin_mbedtls=yes builtin_zstd=yes builtin_zlib=yes \
+            use_asm=no CCFLAGS="-DZSTD_DISABLE_ASM=1" -j2
 
       - name: Upload Binary
         uses: actions/upload-artifact@v4
