@@ -16,12 +16,17 @@ jobs:
             libasound2-dev libpulse-dev libudev-dev libdbus-1-dev \
             libfontconfig1-dev libxkbcommon-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
+      - name: Patch Zstd (The Sting Killer)
+        run: |
+          # This forces Zstd to realize it should NOT use x86 assembly on ARM64
+          sed -i 's/ZSTD_ENABLE_ASM_X86_64_BMI2 1/ZSTD_ENABLE_ASM_X86_64_BMI2 0/g' thirdparty/zstd/common/zstd_deps.h || true
+          sed -i 's/ZSTD_ENABLE_ASM_X86_64_BMI2 1/ZSTD_ENABLE_ASM_X86_64_BMI2 0/g' thirdparty/zstd/common/portability_macros.h || true
+
       - name: Compilation
         run: |
           scons platform=linuxbsd arch=arm64 target=template_release precision=double \
-            display_server=headless builtin_zstd=yes builtin_zlib=yes use_asm=no \
-            CCFLAGS="-DZSTD_NO_ASM -DHUF_FORCE_DECOMPRESS_X1" \
-            -j2
+            display_server=headless builtin_zstd=yes builtin_zlib=yes builtin_freetype=yes \
+            use_asm=no CCFLAGS="-DZSTD_DISABLE_ASM=1 -DZSTD_HAVE_ASM_X86_64_BMI2=0" -j2
 
       - name: Upload Binary
         uses: actions/upload-artifact@v4
